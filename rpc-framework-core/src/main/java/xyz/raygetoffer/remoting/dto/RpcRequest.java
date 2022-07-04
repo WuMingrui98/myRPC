@@ -13,7 +13,8 @@ import java.io.Serializable;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RpcRequest<T> implements Serializable {
+public class RpcRequest implements Serializable {
     private static final long serialVersionUID = 5684991405913109601L;
-    int message;
+    private String interfaceName;
+    private String methodName;
 }

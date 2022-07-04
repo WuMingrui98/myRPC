@@ -15,5 +15,5 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class RpcResponse<T> implements Serializable {
     private static final long serialVersionUID = -6250729106512286225L;
-    int message;
+    private String message;
 }

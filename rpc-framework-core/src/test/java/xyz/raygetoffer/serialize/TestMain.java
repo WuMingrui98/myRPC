@@ -14,7 +14,7 @@ import xyz.raygetoffer.serialize.kryo.KryoSerializeTest;
  */
 public class TestMain {
     public static void main(String[] args) {
-        RpcResponse<Object> response = RpcResponse.builder().message(1).build();
+        RpcResponse<Object> response = RpcResponse.builder().message("123").build();
 //        ISerializer serializer=new JdkSerializer();
 //        ISerializer serializer = new KryoSerializer();
 //        ISerializer serializer = new ProtostuffSerializer();
