@@ -1,6 +1,6 @@
 package xyz.raygetoffer.communication.socket;
 
-import xyz.raygetoffer.remoting.communication.impl.socket.SocketRpcServer;
+import xyz.raygetoffer.remoting.communication.socket.SocketRpcServer;
 
 /**
  * @author mingruiwu

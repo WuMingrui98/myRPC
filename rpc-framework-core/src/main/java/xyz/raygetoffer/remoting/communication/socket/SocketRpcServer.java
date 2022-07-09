@@ -1,6 +1,5 @@
-package xyz.raygetoffer.remoting.communication.impl.socket;
+package xyz.raygetoffer.remoting.communication.socket;
 
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import xyz.raygetoffer.utils.concurrent.threadpool.ThreadPoolFactoryUtil;
 
@@ -9,7 +8,6 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author mingruiwu

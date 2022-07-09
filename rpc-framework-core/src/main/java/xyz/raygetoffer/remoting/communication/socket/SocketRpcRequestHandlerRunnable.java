@@ -1,4 +1,4 @@
-package xyz.raygetoffer.remoting.communication.impl.socket;
+package xyz.raygetoffer.remoting.communication.socket;
 
 import lombok.extern.slf4j.Slf4j;
 import xyz.raygetoffer.remoting.dto.RpcRequest;
@@ -28,7 +28,8 @@ public class SocketRpcRequestHandlerRunnable implements Runnable {
         try (ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream())) {
             RpcRequest rpcRequest = (RpcRequest) objectInputStream.readObject();
-            RpcResponse<String> rpcResponse = new RpcResponse<>("112");
+            RpcResponse<String> rpcResponse = new RpcResponse<>();
+            rpcResponse.setMessage("123");
             objectOutputStream.writeObject(rpcResponse);
             objectOutputStream.flush();
         } catch (IOException | ClassNotFoundException e) {

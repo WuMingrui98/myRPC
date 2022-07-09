@@ -1,4 +1,4 @@
-package xyz.raygetoffer.remoting.communication.impl.socket;
+package xyz.raygetoffer.remoting.communication.socket;
 
 import lombok.extern.slf4j.Slf4j;
 import xyz.raygetoffer.exception.RpcException;
