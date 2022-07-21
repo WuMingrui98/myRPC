@@ -94,8 +94,12 @@ public class NettyRpcClient implements IRpcRequestCommunication {
     }
 
 
+    // TODO 发送rpcRequest需要完善
     @Override
     public Object sendRpcRequest(RpcRequest rpcRequest) {
+        if (rpcRequest == null) {
+            throw new RuntimeException("rpcRequest is not null!");
+        }
         // 构造返回值
         CompletableFuture<RpcResponse<Object>> resultFuture = new CompletableFuture<>();
         // 假设服务端地址固定

@@ -1,10 +1,13 @@
 package xyz.raygetoffer.serialize;
 
+import xyz.raygetoffer.extension.SPI;
+
 /**
  * @author mingruiwu
  * @create 2022/6/28 10:56
  * @description 序列化接口，完成对象的序列化和反序列化
  */
+@SPI(value = "kryo")
 public interface ISerializer {
 
     /**

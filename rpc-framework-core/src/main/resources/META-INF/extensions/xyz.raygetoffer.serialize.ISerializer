@@ -1,0 +1,4 @@
+kryo=xyz.raygetoffer.serialize.impl.kryo.KryoSerializer
+hessian=xyz.raygetoffer.serialize.impl.hessian.HessianSerializer
+jdk=xyz.raygetoffer.serialize.impl.jdk.JdkSerializer
+protostuff=xyz.raygetoffer.serialize.impl.protostuff.ProtostuffSerializer

@@ -1,5 +1,6 @@
 package xyz.raygetoffer.compress.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import xyz.raygetoffer.compress.ICompress;

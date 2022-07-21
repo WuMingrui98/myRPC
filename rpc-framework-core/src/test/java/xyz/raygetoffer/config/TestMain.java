@@ -19,7 +19,6 @@ public class TestMain{
 
     @Test
     public void propsTest() {
-        PropertiesLoaderUtils
         System.out.println(myConfig);
     }
 }

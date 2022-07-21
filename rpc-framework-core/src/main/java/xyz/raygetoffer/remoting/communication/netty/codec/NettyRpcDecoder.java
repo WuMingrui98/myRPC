@@ -79,7 +79,6 @@ public class NettyRpcDecoder extends ByteToMessageDecoder {
         RpcMessage rpcMessage = RpcMessage.builder()
                 .messageType(msgType)
                 .codec(codecType)
-                .requestId(requestId)
                 .compress(compressType).build();
         if (msgType == RpcConstants.HEARTBEAT_REQUEST_TYPE) {
             rpcMessage.setData(RpcConstants.PING);

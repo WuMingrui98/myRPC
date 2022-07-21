@@ -20,13 +20,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public class NettyRpcServerHandler extends ChannelInboundHandlerAdapter {
-    private static final AtomicInteger atomicInteger = new AtomicInteger(1);
+    private static final AtomicInteger ATOMIC_INTEGER = new AtomicInteger(1);
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try {
             RpcRequest rpcRequest = (RpcRequest) msg;
-            log.info("server receive msg: [{}] ,times:[{}]", rpcRequest, atomicInteger.getAndIncrement());
+            log.info("server receive msg: [{}] ,times:[{}]", rpcRequest, ATOMIC_INTEGER.getAndIncrement());
             RpcResponse<Object> messageFromServer = RpcResponse.builder().message("message from server").build();
             ChannelFuture channelFuture = ctx.channel().writeAndFlush(messageFromServer);
             channelFuture.addListener(ChannelFutureListener.CLOSE);

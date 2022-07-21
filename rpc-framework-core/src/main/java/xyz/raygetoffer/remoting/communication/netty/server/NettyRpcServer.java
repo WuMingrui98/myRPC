@@ -33,11 +33,13 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class NettyRpcServer {
-    private final int port;
+    public static final int PORT = 9999;
 
-    public NettyRpcServer(int port) {
-        this.port = port;
-    }
+//    public NettyRpcServer(int port) {
+//        this.PORT = port;
+//    }
+
+
 
     @SneakyThrows
     public void run() {
@@ -77,7 +79,7 @@ public class NettyRpcServer {
 
                         }
                     });
-            ChannelFuture channelFuture = serverBootstrap.bind(port).sync();
+            ChannelFuture channelFuture = serverBootstrap.bind(PORT).sync();
             // 等待服务端监听端口关闭
             channelFuture.channel().closeFuture().sync();
         } catch (InterruptedException e) {
