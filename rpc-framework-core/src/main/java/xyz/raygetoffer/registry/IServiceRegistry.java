@@ -1,5 +1,7 @@
 package xyz.raygetoffer.registry;
 
+import xyz.raygetoffer.extension.SPI;
+
 import java.net.InetSocketAddress;
 
 /**
@@ -9,6 +11,7 @@ import java.net.InetSocketAddress;
  * @create 2022/7/6 10:28
  * @description
  */
+@SPI(value = "zk")
 public interface IServiceRegistry {
     /**
      * 将服务注册到注册中心

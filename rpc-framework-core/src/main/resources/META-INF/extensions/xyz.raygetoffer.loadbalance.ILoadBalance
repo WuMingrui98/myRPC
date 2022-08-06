@@ -1,0 +1,4 @@
+default=consistentHash
+consistentHash=xyz.raygetoffer.loadbalance.impl.ConsistentHashLoadBalance
+poll=xyz.raygetoffer.loadbalance.impl.PollLoadBalance
+random=xyz.raygetoffer.loadbalance.impl.RandomLoadBalance

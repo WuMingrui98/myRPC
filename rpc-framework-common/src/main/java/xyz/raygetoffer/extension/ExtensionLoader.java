@@ -33,6 +33,9 @@ public class ExtensionLoader<T> {
     // 每个接口的每个实现类别名有一个对应的Class对象，从配置文件中导入
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
 
+    // 配置文件中的默认实现类
+    private String defaultName = null;
+
     public ExtensionLoader(Class<?> type) {
         this.type = type;
     }
@@ -94,13 +97,23 @@ public class ExtensionLoader<T> {
     }
 
     /**
-     * 默认从@SPI注解上获取值
+     * 默认先@SPI注解上获取值，可以被配置覆盖
      * @return
      */
     public T getExtension() {
+        T instance = null;
         SPI annotation = type.getAnnotation(SPI.class);
         String value = annotation.value();
-        return getExtension(value);
+        if (!StringUtils.isEmpty(value)) {
+            instance = getExtension(value);
+        }
+        if (!StringUtils.isEmpty(defaultName)) {
+            instance = getExtension(defaultName);
+        }
+        if (instance == null) {
+            throw new RuntimeException("Can not get Extension Instance");
+        }
+        return instance;
     }
 
     /**
@@ -195,11 +208,16 @@ public class ExtensionLoader<T> {
                     String className = line.substring(ei + 1);
                     className = className.trim();
                     if (name.length() > 0 && className.length() > 0) {
-                        try {
-                            Class<?> loadClass = classLoader.loadClass(className);
-                            extensionClasses.put(name, loadClass);
-                        } catch (ClassNotFoundException e) {
-                            log.error(e.getMessage());
+                        if ("default".equals(name)) {
+                            // 配置默认实现
+                            defaultName = className;
+                        } else {
+                            try {
+                                Class<?> loadClass = classLoader.loadClass(className);
+                                extensionClasses.put(name, loadClass);
+                            } catch (ClassNotFoundException e) {
+                                log.error(e.getMessage());
+                            }
                         }
                     }
                 }

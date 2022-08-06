@@ -1,7 +1,5 @@
 package xyz.raygetoffer.registry.zk;
 
-import xyz.raygetoffer.loadbalance.LoadBalance;
-import xyz.raygetoffer.loadbalance.impl.RandomLoadBalance;
 import xyz.raygetoffer.registry.IServiceRegistry;
 import xyz.raygetoffer.registry.zk.utils.CuratorUtil;
 

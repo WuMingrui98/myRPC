@@ -1,4 +1,4 @@
-package xyz.raygetoffer.serialize.impl.kryo;
+package xyz.raygetoffer.serialize.impl;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;

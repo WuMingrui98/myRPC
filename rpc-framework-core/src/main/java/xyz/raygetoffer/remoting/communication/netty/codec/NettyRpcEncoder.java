@@ -4,6 +4,11 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import xyz.raygetoffer.compress.ICompress;
+import xyz.raygetoffer.enums.CompressTypeEnum;
+import xyz.raygetoffer.enums.SerializationTypeEnum;
+import xyz.raygetoffer.extension.ExtensionLoader;
 import xyz.raygetoffer.remoting.constants.RpcConstants;
 import xyz.raygetoffer.remoting.dto.RpcMessage;
 import xyz.raygetoffer.serialize.ISerializer;
@@ -42,37 +47,42 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @description
  */
 @AllArgsConstructor
+@Slf4j
 public class NettyRpcEncoder extends MessageToByteEncoder<RpcMessage> {
     // 计算requestId
     private static final AtomicInteger ATOMIC_INTEGER = new AtomicInteger(0);
 
-    private final ISerializer serializer;
-
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, RpcMessage msg, ByteBuf out) throws Exception {
-        out.writeBytes(RpcConstants.MAGIC_CODE);
-        out.writeByte(RpcConstants.VERSION);
-        byte msgType = msg.getMessageType();
-        out.writeByte(msgType);
-        out.writeByte(msg.getCodec());
-        out.writeByte(msg.getCompress());
-        int requestId = ATOMIC_INTEGER.getAndIncrement();
-        out.writeInt(requestId);
-        int dataLength = 0;
-        byte[] data = null;
-        // 如果msgType为heart message的话，data不需要设置
-        if (msgType != RpcConstants.HEARTBEAT_REQUEST_TYPE && msgType != RpcConstants.HEARTBEAT_RESPONSE_TYPE) {
-            // TODO 序列化和压缩拓展
-            // 序列化
-            data = serializer.serialize(msg.getData());
+    protected void encode(ChannelHandlerContext ctx, RpcMessage msg, ByteBuf out) {
+        try {
+            out.writeBytes(RpcConstants.MAGIC_CODE);
+            out.writeByte(RpcConstants.VERSION);
+            byte msgType = msg.getMessageType();
+            out.writeByte(msgType);
+            out.writeByte(msg.getCodec());
+            out.writeByte(msg.getCompress());
+            int requestId = ATOMIC_INTEGER.getAndIncrement();
+            out.writeInt(requestId);
+            int dataLength = 0;
+            byte[] data = null;
+            // 如果msgType为heart message的话，data不需要设置
+            if (msgType != RpcConstants.HEARTBEAT_REQUEST_TYPE && msgType != RpcConstants.HEARTBEAT_RESPONSE_TYPE) {
+                // 序列化
+                ISerializer serializer = ExtensionLoader.getExtensionLoader(ISerializer.class).getExtension(SerializationTypeEnum.getName(msg.getCodec()));
+                data = serializer.serialize(msg.getData());
+                // 压缩
+                ICompress compress = ExtensionLoader.getExtensionLoader(ICompress.class).getExtension(CompressTypeEnum.getName(msg.getCompress()));
+                data = compress.decompress(data);
 
-            // 压缩
-            dataLength += data.length;
-        }
-        out.writeInt(dataLength);
-        if (data != null) {
-            out.writeBytes(data);
+                dataLength += data.length;
+            }
+            out.writeInt(dataLength);
+            if (data != null) {
+                out.writeBytes(data);
+            }
+        } catch (Exception e) {
+            log.error("Encode request error!", e);
         }
     }
 }

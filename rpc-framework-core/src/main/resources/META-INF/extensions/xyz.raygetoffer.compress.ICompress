@@ -1,0 +1,3 @@
+gzip=xyz.raygetoffer.compress.impl.GzipCompress
+lz4=xyz.raygetoffer.compress.impl.Lz4Compress
+default=gzip

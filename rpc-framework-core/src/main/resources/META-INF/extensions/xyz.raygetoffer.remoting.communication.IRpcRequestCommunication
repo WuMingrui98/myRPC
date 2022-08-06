@@ -1,0 +1,3 @@
+netty=xyz.raygetoffer.remoting.communication.netty.client.NettyRpcClient
+socket=xyz.raygetoffer.remoting.communication.socket.SocketRpcClient
+default=netty

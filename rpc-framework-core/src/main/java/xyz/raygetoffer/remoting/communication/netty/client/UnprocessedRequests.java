@@ -1,5 +1,6 @@
 package xyz.raygetoffer.remoting.communication.netty.client;
 
+import org.springframework.stereotype.Component;
 import xyz.raygetoffer.remoting.dto.RpcResponse;
 
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @create 2022/7/4 14:41
  * @description
  */
+@Component
 public class UnprocessedRequests {
     private static final Map<String, CompletableFuture<RpcResponse<Object>>> UNPROCESSED_RESPONSE_FUTURES = new ConcurrentHashMap<>();
 

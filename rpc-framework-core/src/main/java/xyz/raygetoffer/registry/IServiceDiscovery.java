@@ -1,5 +1,6 @@
 package xyz.raygetoffer.registry;
 
+import xyz.raygetoffer.extension.SPI;
 import xyz.raygetoffer.remoting.dto.RpcRequest;
 
 import java.net.InetSocketAddress;
@@ -11,6 +12,7 @@ import java.net.InetSocketAddress;
  * @create 2022/7/6 10:28
  * @description
  */
+@SPI(value = "zk")
 public interface IServiceDiscovery {
     /**
      * 根据rpcRequest获取远程服务地址

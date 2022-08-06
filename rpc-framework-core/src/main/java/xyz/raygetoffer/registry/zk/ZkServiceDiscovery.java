@@ -3,8 +3,8 @@ package xyz.raygetoffer.registry.zk;
 import org.apache.curator.framework.CuratorFramework;
 import xyz.raygetoffer.enums.RpcErrorMessageEnum;
 import xyz.raygetoffer.exception.RpcException;
-import xyz.raygetoffer.loadbalance.LoadBalance;
-import xyz.raygetoffer.loadbalance.impl.RandomLoadBalance;
+import xyz.raygetoffer.extension.ExtensionLoader;
+import xyz.raygetoffer.loadbalance.ILoadBalance;
 import xyz.raygetoffer.registry.IServiceDiscovery;
 import xyz.raygetoffer.registry.zk.utils.CuratorUtil;
 import xyz.raygetoffer.remoting.dto.RpcRequest;
@@ -21,9 +21,7 @@ import java.util.List;
  * @description
  */
 public class ZkServiceDiscovery implements IServiceDiscovery {
-    // TODO 根据定义选择负载均衡策略
-    private final LoadBalance loadBalance = new RandomLoadBalance();
-
+    private final ILoadBalance loadBalance = ExtensionLoader.getExtensionLoader(ILoadBalance.class).getExtension();
 
     @Override
     public InetSocketAddress discoverService(RpcRequest rpcRequest) {

@@ -1,5 +1,6 @@
 package xyz.raygetoffer.remoting.communication;
 
+import xyz.raygetoffer.extension.SPI;
 import xyz.raygetoffer.remoting.dto.RpcRequest;
 
 /**
@@ -9,6 +10,7 @@ import xyz.raygetoffer.remoting.dto.RpcRequest;
  * @create 2022/6/29 16:51
  * @description
  */
+@SPI(value = "netty")
 public interface IRpcRequestCommunication {
 
     Object sendRpcRequest(RpcRequest rpcRequest);

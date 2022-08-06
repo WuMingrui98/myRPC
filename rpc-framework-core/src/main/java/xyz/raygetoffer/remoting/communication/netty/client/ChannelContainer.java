@@ -2,6 +2,7 @@ package xyz.raygetoffer.remoting.communication.netty.client;
 
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @description
  */
 @Slf4j
+@Component
 public class ChannelContainer {
     private final Map<String, Channel> CHANNEL_MAP;
 
@@ -32,7 +34,7 @@ public class ChannelContainer {
             if (channel.isActive()) {
                 return channel;
             } else {
-                CHANNEL_MAP.remove(key);
+                removeChannel(inetSocketAddress);
             }
         }
         return null;

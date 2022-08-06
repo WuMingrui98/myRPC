@@ -1,4 +1,4 @@
-package xyz.raygetoffer.serialize.impl.hessian;
+package xyz.raygetoffer.serialize.impl;
 
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;

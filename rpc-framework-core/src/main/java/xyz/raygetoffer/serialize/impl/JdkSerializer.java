@@ -1,4 +1,4 @@
-package xyz.raygetoffer.serialize.impl.jdk;
+package xyz.raygetoffer.serialize.impl;
 
 import xyz.raygetoffer.exception.SerializeException;
 import xyz.raygetoffer.serialize.ISerializer;

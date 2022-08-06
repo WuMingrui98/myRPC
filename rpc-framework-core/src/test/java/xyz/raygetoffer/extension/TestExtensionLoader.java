@@ -1,5 +1,6 @@
 package xyz.raygetoffer.extension;
 
+import xyz.raygetoffer.compress.ICompress;
 import xyz.raygetoffer.serialize.ISerializer;
 
 /**
@@ -9,7 +10,10 @@ import xyz.raygetoffer.serialize.ISerializer;
  */
 public class TestExtensionLoader {
     public static void main(String[] args) {
-        ISerializer extension = ExtensionLoader.getExtensionLoader(ISerializer.class).getExtension("hessian");
+//        ISerializer extension = ExtensionLoader.getExtensionLoader(ISerializer.class).getExtension();
+        ICompress extension = ExtensionLoader.getExtensionLoader(ICompress.class).getExtension();
+        ICompress extension2 = ExtensionLoader.getExtensionLoader(ICompress.class).getExtension();
         System.out.println(extension);
+        System.out.println(extension2);
     }
 }

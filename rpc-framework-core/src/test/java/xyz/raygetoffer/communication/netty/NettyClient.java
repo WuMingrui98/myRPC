@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import xyz.raygetoffer.remoting.dto.RpcRequest;
 import xyz.raygetoffer.remoting.dto.RpcResponse;
 import xyz.raygetoffer.serialize.ISerializer;
-import xyz.raygetoffer.serialize.impl.kryo.KryoSerializer;
+import xyz.raygetoffer.serialize.impl.KryoSerializer;
 
 /**
  * 使用Netty实现RPC客户端

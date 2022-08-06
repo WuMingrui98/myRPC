@@ -1,7 +1,9 @@
 package xyz.raygetoffer.provider;
 
 
+import org.springframework.stereotype.Component;
 import xyz.raygetoffer.config.RpcServiceConfig;
+import xyz.raygetoffer.extension.SPI;
 
 /**
  * 服务提供者
@@ -10,6 +12,7 @@ import xyz.raygetoffer.config.RpcServiceConfig;
  * @create 2022/7/9 20:04
  * @description
  */
+@SPI("zk")
 public interface IServiceProvider {
 
     /**

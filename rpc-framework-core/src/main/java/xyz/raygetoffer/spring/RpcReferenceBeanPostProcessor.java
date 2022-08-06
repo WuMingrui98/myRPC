@@ -7,6 +7,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
 import xyz.raygetoffer.annotation.RpcReference;
 import xyz.raygetoffer.config.RpcServiceConfig;
+import xyz.raygetoffer.extension.ExtensionLoader;
 import xyz.raygetoffer.proxy.RpcClientProxyFactory;
 import xyz.raygetoffer.remoting.communication.IRpcRequestCommunication;
 
@@ -26,9 +27,8 @@ import java.lang.reflect.Field;
 public class RpcReferenceBeanPostProcessor implements BeanPostProcessor {
     private final IRpcRequestCommunication rpcClient;
 
-    // TODO 需要改成具体的实例
-    public RpcReferenceBeanPostProcessor(IRpcRequestCommunication rpcClient) {
-        this.rpcClient = rpcClient;
+    public RpcReferenceBeanPostProcessor() {
+        this.rpcClient = ExtensionLoader.getExtensionLoader(IRpcRequestCommunication.class).getExtension();
     }
 
     @Override

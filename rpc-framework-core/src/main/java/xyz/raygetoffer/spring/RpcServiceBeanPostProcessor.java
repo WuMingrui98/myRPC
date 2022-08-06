@@ -6,6 +6,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
 import xyz.raygetoffer.annotation.RpcService;
 import xyz.raygetoffer.config.RpcServiceConfig;
+import xyz.raygetoffer.extension.ExtensionLoader;
 import xyz.raygetoffer.provider.IServiceProvider;
 import xyz.raygetoffer.remoting.communication.IRpcRequestCommunication;
 
@@ -22,10 +23,8 @@ import xyz.raygetoffer.remoting.communication.IRpcRequestCommunication;
 public class RpcServiceBeanPostProcessor implements BeanPostProcessor {
     private final IServiceProvider serviceProvider;
 
-
-    // TODO 需要改成具体的实例
-    public RpcServiceBeanPostProcessor(IServiceProvider serviceProvider, IRpcRequestCommunication rpcClient) {
-        this.serviceProvider = serviceProvider;
+    public RpcServiceBeanPostProcessor() {
+        this.serviceProvider = ExtensionLoader.getExtensionLoader(IServiceProvider.class).getExtension();
     }
 
     @Override

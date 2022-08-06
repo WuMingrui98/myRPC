@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import xyz.raygetoffer.config.RpcServiceConfig;
 import xyz.raygetoffer.enums.RpcErrorMessageEnum;
 import xyz.raygetoffer.exception.RpcException;
+import xyz.raygetoffer.extension.ExtensionLoader;
 import xyz.raygetoffer.provider.IServiceProvider;
 import xyz.raygetoffer.registry.IServiceRegistry;
 import xyz.raygetoffer.registry.zk.ZkServiceRegistry;
@@ -30,8 +31,7 @@ public class ZkServiceProvider implements IServiceProvider {
 
     public ZkServiceProvider() {
         this.serviceMap = new ConcurrentHashMap<>();
-        // TODO 不同的serviceRegistry
-        this.serviceRegistry = new ZkServiceRegistry();
+        this.serviceRegistry = ExtensionLoader.getExtensionLoader(IServiceRegistry.class).getExtension();
     }
 
     @Override

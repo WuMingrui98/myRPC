@@ -8,6 +8,8 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import xyz.raygetoffer.enums.SerializationTypeEnum;
 import xyz.raygetoffer.remoting.communication.netty.client.NettyRpcClient;
 import xyz.raygetoffer.remoting.communication.netty.client.UnprocessedRequests;
 import xyz.raygetoffer.remoting.constants.RpcConstants;
@@ -22,37 +24,47 @@ import java.net.InetSocketAddress;
  * @description
  */
 @Slf4j
-public class NettyRpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
-    private final UnprocessedRequests unprocessedRequests;
-    private final NettyRpcClient nettyRpcClient;
+public class NettyRpcClientHandler extends SimpleChannelInboundHandler<RpcMessage> {
+    @Autowired
+    private UnprocessedRequests unprocessedRequests;
+    @Autowired
+    private NettyRpcClient nettyRpcClient;
 
-    public NettyRpcClientHandler(UnprocessedRequests unprocessedRequests, NettyRpcClient nettyRpcClient) {
-        this.unprocessedRequests = unprocessedRequests;
-        this.nettyRpcClient = nettyRpcClient;
+
+    public NettyRpcClientHandler() {
     }
 
-    // TODO client channelRead0
+    /**
+    SimpleChannelInboundHandler内部自动释放了ByteBuf
+     */
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, RpcResponse msg) throws Exception {
+    @SuppressWarnings("unchecked")
+    protected void channelRead0(ChannelHandlerContext ctx, RpcMessage msg) throws Exception {
         log.info("client receive msg: [{}]", msg.toString());
-        // 声明一个 AttributeKey 对象
-        AttributeKey<RpcResponse> key = AttributeKey.valueOf("rpcResponse");
-        // 将服务端的返回结果保存到 AttributeMap 上，AttributeMap 可以看作是一个Channel的共享数据源
-        // AttributeMap的key是AttributeKey，value是Attribute
-        ctx.channel().attr(key).set(msg);
-        ctx.channel().close();
+        //根据msg的类型进行对应的处理
+        byte messageType = msg.getMessageType();
+        if (messageType == RpcConstants.HEARTBEAT_RESPONSE_TYPE) {
+            log.info("heart [{}]", msg.getData());
+        } else if (messageType == RpcConstants.RESPONSE_TYPE) {
+            RpcResponse<Object> rpcResponse = (RpcResponse<Object>) msg.getData();
+            unprocessedRequests.complete(rpcResponse);
+        }
     }
 
+    /**
+     * 当处理消息出现异常时调用
+     */
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         log.error("client caught exception", cause);
         ctx.close();
     }
 
-    // Netty心跳机制，保证客户端和服务端之间的长连接, 自动发送ping消息
+    /**
+     * Netty心跳机制，保证客户端和服务端之间的长连接, 自动发送ping消息
+     */
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        // TODO 心跳机制完善
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
             // 触发写空闲事件
@@ -60,7 +72,7 @@ public class NettyRpcClientHandler extends SimpleChannelInboundHandler<RpcRespon
                 log.info("write idle happen [{}]", ctx.channel().remoteAddress());
                 Channel channel = nettyRpcClient.getChannel((InetSocketAddress) ctx.channel().remoteAddress());
                 RpcMessage rpcMessage = new RpcMessage();
-//                rpcMessage.setCodec();
+//                rpcMessage.setCodec(SerializationTypeEnum.getCode());
                 rpcMessage.setMessageType(RpcConstants.HEARTBEAT_REQUEST_TYPE);
 //                rpcMessage.setCompress();
 //                rpcMessage.setData();

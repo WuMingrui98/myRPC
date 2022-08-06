@@ -5,15 +5,26 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import xyz.raygetoffer.enums.CompressTypeEnum;
 import xyz.raygetoffer.enums.RpcErrorMessageEnum;
+import xyz.raygetoffer.enums.SerializationTypeEnum;
 import xyz.raygetoffer.exception.RpcException;
+import xyz.raygetoffer.extension.ExtensionLoader;
+import xyz.raygetoffer.provider.IServiceProvider;
+import xyz.raygetoffer.registry.IServiceDiscovery;
 import xyz.raygetoffer.remoting.communication.IRpcRequestCommunication;
 import xyz.raygetoffer.remoting.communication.netty.client.handler.NettyRpcClientHandler;
 import xyz.raygetoffer.remoting.communication.netty.codec.NettyRpcDecoder;
 import xyz.raygetoffer.remoting.communication.netty.codec.NettyRpcEncoder;
 import xyz.raygetoffer.remoting.communication.netty.codec.ProtocolFrameDecoder;
+import xyz.raygetoffer.remoting.constants.RpcConstants;
 import xyz.raygetoffer.remoting.dto.RpcMessage;
 import xyz.raygetoffer.remoting.dto.RpcRequest;
 import xyz.raygetoffer.remoting.dto.RpcResponse;
@@ -31,25 +42,26 @@ import java.util.concurrent.TimeUnit;
  * @description
  */
 @Slf4j
+@Component
 public class NettyRpcClient implements IRpcRequestCommunication {
-    private final String host;
-    private final int port;
-    private final UnprocessedRequests unprocessedRequests;
-    private final ChannelContainer channelContainer;
+    @Autowired
+    private UnprocessedRequests unprocessedRequests;
+    @Autowired
+    private ChannelContainer channelContainer;
+    private final IServiceDiscovery serviceDiscovery;
     private final Bootstrap bootstrap;
     private final EventLoopGroup eventLoopGroup;
 
-    public NettyRpcClient(String host, int port) {
-        this.host = host;
-        this.port = port;
-        this.unprocessedRequests = new UnprocessedRequests();
-        this.channelContainer = new ChannelContainer();
 
+
+    public NettyRpcClient() {
+        this.serviceDiscovery = ExtensionLoader.getExtensionLoader(IServiceDiscovery.class).getExtension();
         // 初始化bootstrap和eventLoopGroup
         bootstrap = new Bootstrap();
         eventLoopGroup = new NioEventLoopGroup();
         bootstrap.group(eventLoopGroup)
                 .channel(NioSocketChannel.class)
+                .handler(new LoggingHandler(LogLevel.INFO))
                 //  The timeout period of the connection.
                 //  If this time is exceeded or the connection cannot be established, the connection fails.
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
@@ -59,9 +71,9 @@ public class NettyRpcClient implements IRpcRequestCommunication {
                         // 开启心跳机制，设置写空闲时间为5s
                         ch.pipeline().addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS));
                         ch.pipeline().addLast(new ProtocolFrameDecoder());
-//                        ch.pipeline().addLast(new NettyRpcEncoder());
-//                        ch.pipeline().addLast(new NettyRpcDecoder());
-//                        ch.pipeline().addLast(new NettyRpcClientHandler());
+                        ch.pipeline().addLast(new NettyRpcEncoder());
+                        ch.pipeline().addLast(new NettyRpcDecoder());
+                        ch.pipeline().addLast(new NettyRpcClientHandler());
                     }
                 });
     }
@@ -79,7 +91,7 @@ public class NettyRpcClient implements IRpcRequestCommunication {
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (future.isSuccess()) {
                     log.info("The client has connected [{}] successfully", inetSocketAddress.toString());
-                    completableFuture.complete(((ChannelFuture) future).channel());
+                    completableFuture.complete(future.channel());
                 } else {
                     throw new IllegalStateException();
                 }
@@ -93,8 +105,11 @@ public class NettyRpcClient implements IRpcRequestCommunication {
         }
     }
 
-
-    // TODO 发送rpcRequest需要完善
+    /**
+     * 通过NettyRpcClient发送Rpc请求
+     * @param rpcRequest
+     * @return
+     */
     @Override
     public Object sendRpcRequest(RpcRequest rpcRequest) {
         if (rpcRequest == null) {
@@ -102,16 +117,20 @@ public class NettyRpcClient implements IRpcRequestCommunication {
         }
         // 构造返回值
         CompletableFuture<RpcResponse<Object>> resultFuture = new CompletableFuture<>();
-        // 假设服务端地址固定
-        InetSocketAddress inetSocketAddress = new InetSocketAddress(host, port);
+        // 从注册中心获得地址
+        InetSocketAddress inetSocketAddress = serviceDiscovery.discoverService(rpcRequest);
         // 获得服务端对应的channel
         Channel channel = getChannel(inetSocketAddress);
         if (channel.isActive()) {
             // 放入服务器端未处理的请求
             unprocessedRequests.put(rpcRequest.getRequestId(), resultFuture);
             // 构造RpcMessage
-            RpcMessage rpcMessage = RpcMessage.builder().data(rpcRequest)
-                    .build();
+            RpcMessage rpcMessage = RpcMessage.builder()
+                    .data(rpcRequest)
+                    .messageType(RpcConstants.REQUEST_TYPE).build();
+//                    .compress(CompressTypeEnum.getCode(compressName))
+//                    .codec(SerializationTypeEnum.getCode(serializationName)).build();
+
             channel.writeAndFlush(rpcRequest).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
@@ -133,6 +152,7 @@ public class NettyRpcClient implements IRpcRequestCommunication {
 
     /**
      * 根据ip+port获得对应的channel，先从channelContainer中获取，如果不存在，则进行连接，再放入容器中
+     *
      * @param inetSocketAddress
      * @return
      */

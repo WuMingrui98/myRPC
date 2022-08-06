@@ -1,4 +1,4 @@
-package xyz.raygetoffer.serialize.impl.protostuff;
+package xyz.raygetoffer.serialize.impl;
 
 import io.protostuff.LinkedBuffer;
 import io.protostuff.ProtostuffIOUtil;

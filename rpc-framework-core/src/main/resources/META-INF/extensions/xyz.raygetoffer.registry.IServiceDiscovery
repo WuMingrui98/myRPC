@@ -1,0 +1,2 @@
+default=zk
+zk=xyz.raygetoffer.registry.zk.ZkServiceDiscovery
