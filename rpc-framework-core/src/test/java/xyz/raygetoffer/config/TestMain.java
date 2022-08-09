@@ -5,7 +5,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import xyz.raygetoffer.MyConfig;
 
 
 /**
@@ -16,13 +15,13 @@ import xyz.raygetoffer.MyConfig;
 
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {MyConfig.class})
+@ContextConfiguration(locations = "classpath:applicationContext.xml")
 public class TestMain {
     @Autowired
     private DefaultConfig defaultConfig;
 
     @Test
     public void propsTest() {
-        System.out.println(defaultConfig.getDefaultCodecCode());
+        System.out.println(DefaultConfig.getDefaultCodecCode());
     }
 }

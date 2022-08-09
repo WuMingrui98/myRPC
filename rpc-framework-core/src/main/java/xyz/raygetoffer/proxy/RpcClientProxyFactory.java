@@ -24,6 +24,6 @@ public class RpcClientProxyFactory {
     public static <T> T getProxy(Class<T> tClass, IRpcRequestCommunication rpcClient,
                                  RpcServiceConfig rpcServiceConfig) {
         return (T) Proxy.newProxyInstance(tClass.getClassLoader(),
-                tClass.getInterfaces(), new RpcClientInvocationHandler(rpcClient, rpcServiceConfig));
+                new Class<?>[]{tClass}, new RpcClientInvocationHandler(rpcClient, rpcServiceConfig));
     }
 }

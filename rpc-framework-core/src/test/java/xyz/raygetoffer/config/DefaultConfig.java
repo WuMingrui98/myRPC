@@ -2,7 +2,6 @@ package xyz.raygetoffer.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import xyz.raygetoffer.enums.CompressTypeEnum;
 import xyz.raygetoffer.enums.SerializationTypeEnum;
 
 /**
@@ -19,12 +18,12 @@ public class DefaultConfig {
 
     private static String compressName;
 
-    @Value("hessian")
+    @Value("${myconfig.serializationName}")
     public void setSerializationName(String serializationName) {
         DefaultConfig.serializationName = serializationName;
     }
 
-    @Value("gzip")
+    @Value("${myconfig.compressName}")
     public void setCompressName(String compressName) {
         DefaultConfig.compressName = compressName;
     }
@@ -34,7 +33,7 @@ public class DefaultConfig {
     }
 
     public static byte getDefaultCompressCode() {
-        return CompressTypeEnum.getCode(compressName);
+        return SerializationTypeEnum.getCode(compressName);
     }
 
 }

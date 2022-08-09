@@ -8,10 +8,14 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import xyz.raygetoffer.config.DefaultConfig;
+import xyz.raygetoffer.factory.SingletonFactory;
+import xyz.raygetoffer.remoting.constants.RpcConstants;
+import xyz.raygetoffer.remoting.dto.RpcMessage;
 import xyz.raygetoffer.remoting.dto.RpcRequest;
 import xyz.raygetoffer.remoting.dto.RpcResponse;
-
-import java.util.concurrent.atomic.AtomicInteger;
+import xyz.raygetoffer.remoting.handler.RpcRequestHandler;
 
 /**
  * @author mingruiwu
@@ -19,18 +23,46 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @description
  */
 @Slf4j
+@Component
 public class NettyRpcServerHandler extends ChannelInboundHandlerAdapter {
-    private static final AtomicInteger ATOMIC_INTEGER = new AtomicInteger(1);
+
+    private final RpcRequestHandler rpcRequestHandler = SingletonFactory.getInstance(RpcRequestHandler.class);
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
         try {
-            RpcRequest rpcRequest = (RpcRequest) msg;
-            log.info("server receive msg: [{}] ,times:[{}]", rpcRequest, ATOMIC_INTEGER.getAndIncrement());
-            RpcResponse<Object> messageFromServer = RpcResponse.builder().message("message from server").build();
-            ChannelFuture channelFuture = ctx.channel().writeAndFlush(messageFromServer);
-            channelFuture.addListener(ChannelFutureListener.CLOSE);
+            RpcMessage rpcMessage = (RpcMessage) msg;
+            log.info("server receive msg: [{}]", rpcMessage);
+            // 判断rpcRequest的类型
+            byte messageType = ((RpcMessage) msg).getMessageType();
+            RpcMessage responseMsg = new RpcMessage();
+            responseMsg.setCompress(DefaultConfig.getDefaultCompressCode());
+            responseMsg.setCodec(DefaultConfig.getDefaultCodecCode());
+            if (messageType == RpcConstants.HEARTBEAT_REQUEST_TYPE) {
+                responseMsg.setMessageType(RpcConstants.HEARTBEAT_RESPONSE_TYPE);
+                responseMsg.setData(RpcConstants.PONG);
+            } else {
+                RpcRequest rpcRequest = (RpcRequest) rpcMessage.getData();
+                responseMsg.setMessageType(RpcConstants.RESPONSE_TYPE);
+                Object service = rpcRequestHandler.handle(rpcRequest);
+                // 判断channel的存活状况并且是否可写
+                if (ctx.channel().isActive() && ctx.channel().isWritable()) {
+                    if (service != null) {
+                        log.info(String.format("server get service: %s successfully", service.toString()));
+                        RpcResponse<Object> success = RpcResponse.success(service, rpcRequest.getRequestId());
+                        responseMsg.setData(success);
+                    } else {
+                        log.info("server failed to get service");
+                        RpcResponse<Object> fail = RpcResponse.fail(rpcRequest.getRequestId());
+                        responseMsg.setData(fail);
+                    }
+                }
+            }
+
+            ChannelFuture channelFuture = ctx.channel().writeAndFlush(responseMsg);
+            channelFuture.addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
         } finally {
+            // 释放byteBuf的资源
             ReferenceCountUtil.release(msg);
         }
     }

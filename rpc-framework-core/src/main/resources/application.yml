@@ -1,3 +1,0 @@
-myconfig:
-  serializationName: hessian
-  compressName: gzip

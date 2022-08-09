@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -23,6 +24,27 @@ public final class ThreadPoolFactoryUtil {
      * 通过 threadNamePrefix 来区分不同线程池（我们可以把相同 threadNamePrefix 的线程池看作是为同一业务场景服务）。
      */
     private static final Map<String, ExecutorService> THREAD_POOLS = new ConcurrentHashMap<>();
+
+
+    /**
+     * 关闭所有线程池
+     */
+    public static void shutdownAllThreadPool() {
+        log.info("call shutDownAllThreadPool method");
+        THREAD_POOLS.entrySet().parallelStream().forEach(entry -> {
+            ExecutorService executorService = entry.getValue();
+            executorService.shutdown();
+            log.info("shut down thread pool [{}] [{}]", entry.getKey(), executorService.isTerminated());
+            try {
+                if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
+                    log.error("Thread pool never terminated, shutdown thread pool now");
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                executorService.shutdownNow();
+            }
+        });
+    }
 
     /**
      * 如果ConcurrentHashMap中不存在则创建自定义线程池（最完整的方法）

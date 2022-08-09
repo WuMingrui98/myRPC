@@ -66,7 +66,7 @@ public class NettyRpcDecoder extends ByteToMessageDecoder {
         if (byteBuf.readableBytes() >= RpcConstants.TOTAL_LENGTH) {
             Object obj = decodeFrame(byteBuf);
             list.add(obj);
-            byteBuf.release();
+//            byteBuf.release();
         }
     }
 

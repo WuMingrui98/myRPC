@@ -6,10 +6,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import xyz.raygetoffer.enums.SerializationTypeEnum;
+import org.springframework.stereotype.Component;
+import xyz.raygetoffer.config.DefaultConfig;
+import xyz.raygetoffer.factory.SingletonFactory;
 import xyz.raygetoffer.remoting.communication.netty.client.NettyRpcClient;
 import xyz.raygetoffer.remoting.communication.netty.client.UnprocessedRequests;
 import xyz.raygetoffer.remoting.constants.RpcConstants;
@@ -24,14 +24,15 @@ import java.net.InetSocketAddress;
  * @description
  */
 @Slf4j
+@Component
 public class NettyRpcClientHandler extends SimpleChannelInboundHandler<RpcMessage> {
-    @Autowired
-    private UnprocessedRequests unprocessedRequests;
-    @Autowired
-    private NettyRpcClient nettyRpcClient;
+    private final UnprocessedRequests unprocessedRequests;
+    private final NettyRpcClient nettyRpcClient;
 
 
     public NettyRpcClientHandler() {
+        this.unprocessedRequests = SingletonFactory.getInstance(UnprocessedRequests.class);
+        this.nettyRpcClient = SingletonFactory.getInstance(NettyRpcClient.class);
     }
 
     /**
@@ -72,10 +73,10 @@ public class NettyRpcClientHandler extends SimpleChannelInboundHandler<RpcMessag
                 log.info("write idle happen [{}]", ctx.channel().remoteAddress());
                 Channel channel = nettyRpcClient.getChannel((InetSocketAddress) ctx.channel().remoteAddress());
                 RpcMessage rpcMessage = new RpcMessage();
-//                rpcMessage.setCodec(SerializationTypeEnum.getCode());
+                rpcMessage.setCodec(DefaultConfig.getDefaultCodecCode());
                 rpcMessage.setMessageType(RpcConstants.HEARTBEAT_REQUEST_TYPE);
-//                rpcMessage.setCompress();
-//                rpcMessage.setData();
+                rpcMessage.setCompress(DefaultConfig.getDefaultCompressCode());
+                rpcMessage.setData(RpcConstants.PING);
                 channel.writeAndFlush(rpcMessage).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
             }
         } else {

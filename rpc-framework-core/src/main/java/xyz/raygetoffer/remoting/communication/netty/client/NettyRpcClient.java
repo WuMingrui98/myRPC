@@ -9,15 +9,12 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import xyz.raygetoffer.enums.CompressTypeEnum;
+import xyz.raygetoffer.config.DefaultConfig;
 import xyz.raygetoffer.enums.RpcErrorMessageEnum;
-import xyz.raygetoffer.enums.SerializationTypeEnum;
 import xyz.raygetoffer.exception.RpcException;
 import xyz.raygetoffer.extension.ExtensionLoader;
-import xyz.raygetoffer.provider.IServiceProvider;
+import xyz.raygetoffer.factory.SingletonFactory;
 import xyz.raygetoffer.registry.IServiceDiscovery;
 import xyz.raygetoffer.remoting.communication.IRpcRequestCommunication;
 import xyz.raygetoffer.remoting.communication.netty.client.handler.NettyRpcClientHandler;
@@ -44,10 +41,10 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Component
 public class NettyRpcClient implements IRpcRequestCommunication {
-    @Autowired
-    private UnprocessedRequests unprocessedRequests;
-    @Autowired
-    private ChannelContainer channelContainer;
+    private final UnprocessedRequests unprocessedRequests = SingletonFactory.getInstance(UnprocessedRequests.class);
+
+    private final ChannelContainer channelContainer = SingletonFactory.getInstance(ChannelContainer.class);
+
     private final IServiceDiscovery serviceDiscovery;
     private final Bootstrap bootstrap;
     private final EventLoopGroup eventLoopGroup;
@@ -127,11 +124,11 @@ public class NettyRpcClient implements IRpcRequestCommunication {
             // 构造RpcMessage
             RpcMessage rpcMessage = RpcMessage.builder()
                     .data(rpcRequest)
-                    .messageType(RpcConstants.REQUEST_TYPE).build();
-//                    .compress(CompressTypeEnum.getCode(compressName))
-//                    .codec(SerializationTypeEnum.getCode(serializationName)).build();
+                    .messageType(RpcConstants.REQUEST_TYPE)
+                    .compress(DefaultConfig.getDefaultCompressCode())
+                    .codec(DefaultConfig.getDefaultCodecCode()).build();
 
-            channel.writeAndFlush(rpcRequest).addListener(new ChannelFutureListener() {
+            channel.writeAndFlush(rpcMessage).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     if (future.isSuccess()) {

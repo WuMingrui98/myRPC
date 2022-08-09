@@ -8,6 +8,7 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
+import org.springframework.stereotype.Component;
 import xyz.raygetoffer.annotation.RpcScan;
 import xyz.raygetoffer.annotation.RpcService;
 
@@ -20,6 +21,7 @@ import xyz.raygetoffer.annotation.RpcService;
  */
 @Slf4j
 public class RpcScanScannerRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware {
+    private static final String SPRING_BEAN_BASE_PACKAGE = "xyz.raygetoffer";
     private static final String BASE_PACKAGE_ATTRIBUTE_NAME = "basePackages";
     private ResourceLoader resourceLoader;
 
@@ -41,11 +43,15 @@ public class RpcScanScannerRegistrar implements ImportBeanDefinitionRegistrar, R
         if (rpcScanBasePackages.length == 0) {
             rpcScanBasePackages = new String[] {((StandardAnnotationMetadata) importingClassMetadata).getIntrospectedClass().getPackage().getName()};
         }
+        // 扫描包下有Component注解的类
+        MyBeanDefinitionScanner springBeanScanner = new MyBeanDefinitionScanner(registry, Component.class);
         // 扫描包下有RpcService注解的类
         MyBeanDefinitionScanner rpcServiceScanner = new MyBeanDefinitionScanner(registry, RpcService.class);
         if(resourceLoader != null) {
             rpcServiceScanner.setResourceLoader(resourceLoader);
         }
+        int springBeanAmount = springBeanScanner.scan(SPRING_BEAN_BASE_PACKAGE);
+        log.info("springBeanScanner扫描的数量 [{}]", springBeanAmount);
         int rpcServiceCount = rpcServiceScanner.scan(rpcScanBasePackages);
         log.info("rpcServiceScanner扫描的数量 [{}]", rpcServiceCount);
     }

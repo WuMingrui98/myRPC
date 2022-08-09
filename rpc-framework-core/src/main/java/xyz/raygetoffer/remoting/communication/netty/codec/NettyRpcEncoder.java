@@ -73,7 +73,7 @@ public class NettyRpcEncoder extends MessageToByteEncoder<RpcMessage> {
                 data = serializer.serialize(msg.getData());
                 // 压缩
                 ICompress compress = ExtensionLoader.getExtensionLoader(ICompress.class).getExtension(CompressTypeEnum.getName(msg.getCompress()));
-                data = compress.decompress(data);
+                data = compress.compress(data);
 
                 dataLength += data.length;
             }

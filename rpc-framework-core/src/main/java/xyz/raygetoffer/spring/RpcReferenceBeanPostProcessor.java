@@ -1,15 +1,15 @@
 package xyz.raygetoffer.spring;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
 import xyz.raygetoffer.annotation.RpcReference;
 import xyz.raygetoffer.config.RpcServiceConfig;
-import xyz.raygetoffer.extension.ExtensionLoader;
+import xyz.raygetoffer.factory.SingletonFactory;
 import xyz.raygetoffer.proxy.RpcClientProxyFactory;
 import xyz.raygetoffer.remoting.communication.IRpcRequestCommunication;
+import xyz.raygetoffer.remoting.communication.netty.client.NettyRpcClient;
 
 import java.lang.reflect.Field;
 
@@ -25,10 +25,10 @@ import java.lang.reflect.Field;
 @Slf4j
 @Component
 public class RpcReferenceBeanPostProcessor implements BeanPostProcessor {
-    private final IRpcRequestCommunication rpcClient;
+    private IRpcRequestCommunication rpcClient = SingletonFactory.getInstance(NettyRpcClient.class);
 
     public RpcReferenceBeanPostProcessor() {
-        this.rpcClient = ExtensionLoader.getExtensionLoader(IRpcRequestCommunication.class).getExtension();
+
     }
 
     @Override
@@ -43,7 +43,7 @@ public class RpcReferenceBeanPostProcessor implements BeanPostProcessor {
                         .group(reference.group())
                         .build();
                 // 动态代理生成代理对象并替换
-                Object proxy = RpcClientProxyFactory.getProxy(bean.getClass(), rpcClient, rpcServiceConfig);
+                Object proxy = RpcClientProxyFactory.getProxy(field.getType(), rpcClient, rpcServiceConfig);
                 field.setAccessible(true);
                 try {
                     field.set(bean, proxy);

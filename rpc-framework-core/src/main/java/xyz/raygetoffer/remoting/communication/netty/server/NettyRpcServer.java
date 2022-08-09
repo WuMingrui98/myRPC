@@ -14,6 +14,13 @@ import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import xyz.raygetoffer.config.CustomShutdownHook;
+import xyz.raygetoffer.config.RpcServiceConfig;
+import xyz.raygetoffer.extension.ExtensionLoader;
+import xyz.raygetoffer.provider.IServiceProvider;
+import xyz.raygetoffer.remoting.communication.netty.codec.NettyRpcDecoder;
+import xyz.raygetoffer.remoting.communication.netty.codec.NettyRpcEncoder;
 import xyz.raygetoffer.remoting.communication.netty.codec.ProtocolFrameDecoder;
 import xyz.raygetoffer.remoting.communication.netty.server.handler.NettyRpcServerHandler;
 import xyz.raygetoffer.serialize.ISerializer;
@@ -30,17 +37,19 @@ import java.util.concurrent.TimeUnit;
  * @description
  */
 @Slf4j
+@Component
 public class NettyRpcServer {
     public static final int PORT = 9999;
 
-//    public NettyRpcServer(int port) {
-//        this.PORT = port;
-//    }
+    private final IServiceProvider serviceProvider = ExtensionLoader.getExtensionLoader(IServiceProvider.class).getExtension();
 
-
-
+    public void registerService(RpcServiceConfig rpcServiceConfig) {
+        serviceProvider.publishService(rpcServiceConfig);
+    }
     @SneakyThrows
-    public void run() {
+    public void start() {
+        // 对之前启动信息进行清理
+        CustomShutdownHook.getCustomShutdownHook().clearAll();
         String host = InetAddress.getLocalHost().getHostAddress();
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -48,7 +57,6 @@ public class NettyRpcServer {
                 RuntimeUtil.getCPUs(),
                 ThreadPoolFactoryUtil.createThreadFactory("server-handler-group", false)
         );
-        ISerializer serializer = new KryoSerializer();
         try {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.group(bossGroup, workerGroup)
@@ -67,14 +75,13 @@ public class NettyRpcServer {
                             ch.pipeline().addLast(new IdleStateHandler(30, 0, 0, TimeUnit.SECONDS));
                             // 入站
                             // 解码 ByteBuf -> RpcRequest
-                            ch.pipeline().addLast(new ProtocolFrameDecoder());
-//                            ch.pipeline().addLast(new NettyRpcDecoder());
-                            // 使用额外的线程池来处理NettyRpcServerHandler
-                            ch.pipeline().addLast(serviceHandlerGroup, new NettyRpcServerHandler());
                             // 出栈
                             // 编码 RpcResponse -> ByteBuf
-//                            ch.pipeline().addLast(new NettyRpcEncoder());
-
+                            ch.pipeline().addLast(new NettyRpcEncoder());
+                            ch.pipeline().addLast(new ProtocolFrameDecoder());
+                            ch.pipeline().addLast(new NettyRpcDecoder());
+                            // 使用额外的线程池来处理NettyRpcServerHandler
+                            ch.pipeline().addLast(serviceHandlerGroup, new NettyRpcServerHandler());
                         }
                     });
             ChannelFuture channelFuture = serverBootstrap.bind(PORT).sync();
@@ -83,6 +90,7 @@ public class NettyRpcServer {
         } catch (InterruptedException e) {
             log.error("occur exception when start server:", e);
         } finally {
+            log.info("shutdown bossGroup and workerGroup");
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
             serviceHandlerGroup.shutdownGracefully();
